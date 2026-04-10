@@ -1,5 +1,10 @@
 const express = require('express');
 const mongoose = require('mongoose');
+app.use(cors({
+    origin: "https://hostel-complaint-theta.vercel.app",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+}));
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');

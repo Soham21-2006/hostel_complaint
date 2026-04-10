@@ -1,10 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
-app.use(cors({
-    origin: "https://hostel-complaint-theta.vercel.app",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
-}));
+const cors = require('cors');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -16,7 +12,11 @@ const Complaint = require('./models/Complaint');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: "https://hostel-complaint-theta.vercel.app",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.static('frontend'));
 

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Hostel Complaint System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-building"></i>
+                <span>HostelCare Admin</span>
+            </div>
+            <div class="nav-links">
+                <span id="adminName" class="user-name"></span>
+                <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <div class="sidebar-menu">
+                <button class="menu-btn active" data-tab="dashboard">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </button>
+                <button class="menu-btn" data-tab="complaints">
+                    <i class="fas fa-clipboard-list"></i> All Complaints
+                </button>
+                <button class="menu-btn" data-tab="pending">
+                    <i class="fas fa-clock"></i> Pending
+                </button>
+                <button class="menu-btn" data-tab="resolved">
+                    <i class="fas fa-check-circle"></i> Resolved
+                </button>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <i class="fas fa-file-alt"></i>
+                        <div class="stat-info">
+                            <h3 id="totalComplaints">0</h3>
+                            <p>Total Complaints</p>
+                        </div>
+                    </div>
+                    <div class="stat-card pending">
+                        <i class="fas fa-hourglass-half"></i>
+                        <div class="stat-info">
+                            <h3 id="pendingComplaints">0</h3>
+                            <p>Pending</p>
+                        </div>
+                    </div>
+                    <div class="stat-card in-progress">
+                        <i class="fas fa-spinner"></i>
+                        <div class="stat-info">
+                            <h3 id="inProgressComplaints">0</h3>
+                            <p>In Progress</p>
+                        </div>
+                    </div>
+                    <div class="stat-card resolved">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="stat-info">
+                            <h3 id="resolvedComplaints">0</h3>
+                            <p>Resolved</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
+                        <div class="stat-info">
+                            <h3 id="totalStudents">0</h3>
+                            <p>Total Students</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- All Complaints Tab -->
+            <div id="complaints" class="tab-content">
+                <div class="card">
+                    <h2><i class="fas fa-list"></i> All Student Complaints</h2>
+                    <div id="allComplaintsList" class="complaints-list">
+                        <p class="loading">Loading complaints...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pending Tab -->
+            <div id="pending" class="tab-content">
+                <div class="card">
+                    <h2><i class="fas fa-clock"></i> Pending Complaints</h2>
+                    <div id="pendingList" class="complaints-list">
+                        <p class="loading">Loading pending complaints...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Resolved Tab -->
+            <div id="resolved" class="tab-content">
+                <div class="card">
+                    <h2><i class="fas fa-check-circle"></i> Resolved Complaints</h2>
+                    <div id="resolvedList" class="complaints-list">
+                        <p class="loading">Loading resolved complaints...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="updateModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Update Complaint Status</h3>
+            <form id="updateComplaintForm">
+                <input type="hidden" id="updateComplaintId">
+                <div class="input-group">
+                    <label>Status</label>
+                    <select id="updateStatus">
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Admin Remark (Optional)</label>
+                    <textarea id="updateRemark" rows="3" placeholder="Add any remarks..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Complaint</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://your-backend-url.onrender.com';
+        
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        if (!token || user.role !== 'admin') {
+            window.location.href = 'login.html';
+        }
+        
+        document.getElementById('adminName').textContent = `Admin: ${user.name}`;
+        
+        // Tab switching
+        document.querySelectorAll('.menu-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const tabId = btn.dataset.tab;
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                
+                if (tabId === 'dashboard') {
+                    loadStats();
+                } else if (tabId === 'complaints') {
+                    loadAllComplaints();
+                } else if (tabId === 'pending') {
+                    loadComplaintsByStatus('Pending');
+                } else if (tabId === 'resolved') {
+                    loadComplaintsByStatus('Resolved');
+                }
+            });
+        });
+        
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_URL}/api/stats`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const stats = await response.json();
+                
+                document.getElementById('totalComplaints').textContent = stats.totalComplaints;
+                document.getElementById('pendingComplaints').textContent = stats.pendingComplaints;
+                document.getElementById('inProgressComplaints').textContent = stats.inProgressComplaints;
+                document.getElementById('resolvedComplaints').textContent = stats.resolvedComplaints;
+                document.getElementById('totalStudents').textContent = stats.totalStudents;
+            } catch (error) {
+                console.error('Failed to load stats');
+            }
+        }
+        
+        // Load all complaints
+        async function loadAllComplaints() {
+            try {
+                const response = await fetch(`${API_URL}/api/all-complaints`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const complaints = await response.json();
+                displayComplaints(complaints, 'allComplaintsList');
+            } catch (error) {
+                document.getElementById('allComplaintsList').innerHTML = '<p class="error">Failed to load complaints</p>';
+            }
+        }
+        
+        // Load complaints by status
+        async function loadComplaintsByStatus(status) {
+            try {
+                const response = await fetch(`${API_URL}/api/all-complaints`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const allComplaints = await response.json();
+                const filtered = allComplaints.filter(c => c.status === status);
+                const containerId = status === 'Pending' ? 'pendingList' : 'resolvedList';
+                displayComplaints(filtered, containerId);
+            } catch (error) {
+                const containerId = status === 'Pending' ? 'pendingList' : 'resolvedList';
+                document.getElementById(containerId).innerHTML = '<p class="error">Failed to load complaints</p>';
+            }
+        }
+        
+        // Display complaints
+        function displayComplaints(complaints, containerId) {
+            const container = document.getElementById(containerId);
+            if (complaints.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No complaints found</p></div>';
+                return;
+            }
+            
+            container.innerHTML = complaints.map(complaint => `
+                <div class="complaint-card status-${complaint.status.toLowerCase().replace(' ', '-')}">
+                    <div class="complaint-header">
+                        <span class="complaint-category">${complaint.category}</span>
+                        <span class="complaint-status status-${complaint.status.toLowerCase().replace(' ', '-')}">${complaint.status}</span>
+                    </div>
+                    <div class="complaint-body">
+                        <p><strong>Student:</strong> ${complaint.studentName} (Room: ${complaint.roomNumber})</p>
+                        <p><strong>Issue:</strong> ${complaint.description}</p>
+                        <small><i class="far fa-calendar-alt"></i> Submitted: ${new Date(complaint.createdAt).toLocaleString()}</small>
+                        ${complaint.adminRemark ? `<div class="admin-remark"><strong>Admin Remark:</strong> ${complaint.adminRemark}</div>` : ''}
+                        <button onclick="openUpdateModal('${complaint._id}', '${complaint.status}', '${complaint.adminRemark || ''}')" class="btn-update">
+                            <i class="fas fa-edit"></i> Update Status
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Modal functions
+        const modal = document.getElementById('updateModal');
+        let currentComplaintId = '';
+        
+        window.openUpdateModal = (id, status, remark) => {
+            currentComplaintId = id;
+            document.getElementById('updateComplaintId').value = id;
+            document.getElementById('updateStatus').value = status;
+            document.getElementById('updateRemark').value = remark;
+            modal.style.display = 'block';
+        };
+        
+        document.querySelector('.close').onclick = () => {
+            modal.style.display = 'none';
+        };
+        
+        window.onclick = (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+        
+        // Update complaint
+        document.getElementById('updateComplaintForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const updateData = {
+                status: document.getElementById('updateStatus').value,
+                adminRemark: document.getElementById('updateRemark').value
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/api/complaints/${currentComplaintId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                
+                if (response.ok) {
+                    alert('Complaint updated successfully!');
+                    modal.style.display = 'none';
+                    // Refresh current tab
+                    const activeTab = document.querySelector('.menu-btn.active').dataset.tab;
+                    if (activeTab === 'dashboard') loadStats();
+                    if (activeTab === 'complaints') loadAllComplaints();
+                    if (activeTab === 'pending') loadComplaintsByStatus('Pending');
+                    if (activeTab === 'resolved') loadComplaintsByStatus('Resolved');
+                } else {
+                    const data = await response.json();
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Connection error');
+            }
+        });
+        
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        });
+        
+        // Initial load
+        loadStats();
+    </script>
+</body>
+</html>

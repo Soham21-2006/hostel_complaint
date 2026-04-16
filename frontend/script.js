@@ -6,9 +6,7 @@
 // API Configuration - CHANGE THIS WHEN DEPLOYING
 // For local development: use 'http://localhost:5000'
 // For production: use your deployed backend URL (e.g., 'https://your-app.onrender.com')
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:5000'
-    : 'https://hostel-complaint-kb17.onrender.com'; // ← CHANGE THIS TO YOUR DEPLOYED URL
+const API_URL = "http://localhost:5001";// ← CHANGE THIS TO YOUR DEPLOYED URL
 
 // ============================================
 // HELPER FUNCTIONS

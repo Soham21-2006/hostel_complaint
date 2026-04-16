@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
@@ -13,12 +12,14 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: "https://hostel-complaint-theta.vercel.app",
+    origin: "http://localhost:5001",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
 }));
 app.use(express.json());
-app.use(express.static('frontend'));
+const path = require('path');
+
+app.use(express.static(path.join(__dirname, '../frontend')));
 
 // MongoDB Connection
 const mongoURI = process.env.MONGODB_URI;
@@ -238,7 +239,7 @@ app.get('/api/stats', authenticateToken, async (req, res) => {
 });
 
 // Start Server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });

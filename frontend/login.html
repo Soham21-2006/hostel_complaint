@@ -57,7 +57,7 @@
     </div>
 
     <script>
-        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://your-backend-url.onrender.com';
+        const API_URL = window.location.hostname === 'http://localhost:5001';
         
         let selectedRole = 'student';
         
@@ -92,7 +92,7 @@
             const password = document.getElementById('password').value;
             
             try {
-                const response = await fetch(`${API_URL}/api/login`, {
+                const response = await fetch("http://localhost:5001/api/login", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password, role: selectedRole })

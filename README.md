@@ -27,6 +27,6 @@ A complete full-stack web application for managing hostel complaints efficiently
 | **Database** | MongoDB Atlas (Cloud) |
 | **Authentication** | JWT (JSON Web Tokens) |
 | **Styling** | CSS3 with Flexbox/Grid, Font Awesome Icons |
-| **Deployment** | Render / Cyclic (Free Hosting) |
+| **Deployment** | Locally Host |
 
 ## 📁 Project Structure
